@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Body
 from storage import Session, CustomerDB, AccountDB, load_customers
 
 app = FastAPI(title = "BankSystem")
@@ -33,7 +33,7 @@ def root():
     return {"message" : "Banksystem API is running"}
 
 @app.post("/customers")
-def create_customers(name: str, phone:str):
+def create_customers(name: str = Body(...), phone:str = Body(...)):
     session = Session()
     db_customer = CustomerDB(name = name, phone = phone)
     session.add(db_customer)
@@ -69,7 +69,7 @@ def get_customer_accounts(customer_id: int):
     return [account_to_dict(acc) for acc in accounts]
 
 @app.post("/customers/{customer_id}/accounts")
-def create_account(customer_id: int, account_number: str, account_type:str, balance:float = 0.0,interest_rate:float = 0.0, credit_limit:float = 0.0):
+def create_account(customer_id: int, account_number: str= Body(...), account_type:str= Body(...), balance:float = Body(...),interest_rate:float = Body(...), credit_limit:float = Body(...)):
     session = Session()
     db_customer = session.query(CustomerDB).filter(CustomerDB.id == customer_id).first()
     
@@ -92,7 +92,7 @@ def create_account(customer_id: int, account_number: str, account_type:str, bala
     return result
 
 @app.post("/accounts/{account_number}/deposit")
-def deposit(account_number: str, amount: float):
+def deposit(account_number: str, amount: float = Body(...)):
     if amount <= 0:
         return {"error": "Сумма должна быть положительной"}
     session = Session()
@@ -108,7 +108,7 @@ def deposit(account_number: str, amount: float):
     return result
 
 @app.post("/accounts/{account_number}/withdraw")
-def withdraw(account_number: str, amount: float):
+def withdraw(account_number: str, amount: float = Body(...)):
     if amount <= 0:
         return {"error": "Сумма снятия должна быть положительной"}
     session = Session()
