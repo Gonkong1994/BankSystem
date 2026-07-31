@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Body
 from storage import Session, CustomerDB, AccountDB, load_customers
+import bcrypt
 
 app = FastAPI(title = "BankSystem")
 
@@ -33,14 +34,27 @@ def root():
     return {"message" : "Banksystem API is running"}
 
 @app.post("/customers")
-def create_customers(name: str = Body(...), phone:str = Body(...)):
+def create_customers(name: str = Body(...), phone:str = Body(...), password:str = Body(...)):
+    password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
     session = Session()
-    db_customer = CustomerDB(name = name, phone = phone)
+    db_customer = CustomerDB(name = name, phone = phone, password_hash = password_hash)
     session.add(db_customer)
     session.commit()
     result = customer_to_dict(db_customer)
     session.close()
     return result
+
+@app.post("/login")
+def login(phone: str = Body(...), password: str = Body(...)):
+    session = Session()
+    db_customer = session.query(CustomerDB).filter(CustomerDB.phone == phone).first()
+    session.close()
+    
+    if db_customer is None:
+        return {"error": "Неверный телефон или пароль"}
+    if bcrypt.checkpw(password.encode("utf-8"), db_customer.password_hash.encode("utf-8")):
+        return {"message": "Вход выполнен", "customer_id": db_customer.id}
+    return {"error": "Неверный телефон или пароль"}
 
 @app.get("/customers")
 def get_customers():
