@@ -11,21 +11,53 @@ def test_root():
     assert response.status_code == 200
     assert response.json() == {"message" : "Banksystem API is running"}
     
-def test_create_customer():
+def test_create_customer_with_password():
     response = client.post("/customers/", json={
-        "name" : "Ivan",
-        "phone": "+375291234567"
+        "name": "Сергей",
+        "phone": "+375441234567",
+        "password": "secret123"
     })
     assert response.status_code == 200
     data = response.json()
-    assert data["name"] == "Ivan" 
-    assert data["phone"] == "+375291234567"
-    assert "id" in data
+    assert data["name"] == "Сергей"
+    assert data["phone"] == "+375441234567"
+    assert "password" not in data
+    assert "password_hash" not in data
+    
+def test_login_success():
+    response = client.post("/customers/", json={
+        "name": "Сергей",
+        "phone": "+375441234588",
+        "password": "mypassword"
+    })
+    response = client.post("/login", json={
+        "phone": "+375441234588",
+        "password": "mypassword"
+    })
+    assert response.status_code == 200
+    data = response.json()
+    print(data)
+    assert data["message"] == "Вход выполнен"
+    assert "customer_id" in data
+    
+def test_login_wrong_password():
+    response = client.post("/customers/", json={
+        "name": "Сергей",
+        "phone": "+375441234567",
+        "password": "correct"
+    })
+    response = client.post("/login", json={
+        "phone": "+375445554433",
+        "password": "wrongpassword"
+        })
+    assert response.status_code == 200
+    assert response.json()["error"] == "Неверный телефон или пароль"                  
     
 def test_get_customers():
     client.post("/customers/", json={
         "name" : "Ivan",
-        "phone": "+375291234567"
+        "phone": "+375291234567",
+        "password": "correct"
     })
     response = client.get("/customers")
     assert response.status_code == 200
@@ -36,7 +68,8 @@ def test_get_customers():
 def test_create_account():
     response = client.post("/customers/", json={
             "name" : "Ivan",
-            "phone": "+375291234567"
+            "phone": "+375291234567",
+            "password": "correct"
         })
     data = response.json()
     customer_id = data["id"]
@@ -60,7 +93,8 @@ def test_create_account():
 def test_deposit():
     response = client.post("/customers/", json={
                 "name" : "Ivan",
-                "phone": "+375291234567"
+                "phone": "+375291234567",
+                "password": "correct"
             })
     data = response.json()
     customer_id = data["id"]
@@ -89,7 +123,8 @@ def test_deposit():
 def test_withdraw():
     response = client.post("/customers/", json={
                     "name" : "Ivan",
-                    "phone": "+375291234567"
+                    "phone": "+375291234567",
+                    "password": "correct"
                 })
     data = response.json()
     customer_id = data["id"]
@@ -115,7 +150,8 @@ def test_withdraw():
 def test_total_balance():
     response = client.post("/customers/", json={
                         "name" : "Ivan",
-                        "phone": "+375291234567"
+                        "phone": "+375291234567",
+                        "password": "correct"
                     })
     data = response.json()
     customer_id = data["id"]

@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey
 from sqlalchemy.orm import sessionmaker, DeclarativeBase, relationship
 
-DATABASE_URL = "postgresql://postgres:postgres123@db:5432/banksystem"
+DATABASE_URL = "postgresql://postgres:postgres123@localhost:5432/banksystem"
 engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind = engine)
 
